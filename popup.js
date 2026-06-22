@@ -8,7 +8,8 @@ const blockedUsersKey = "blocked_users";
 const enabledKey = "enable_script";
 
 let getBlockedList = async () => {
-    blockedUsers = await browser.storage.local.get({ [blockedUsersKey]: [] });
+    let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
+    blockedUsers = Object.values(bul)[0];
 }
 
 let removeUser = (username) => {
@@ -64,12 +65,10 @@ let getEnabled = async () => {
 let loadBlockList = () => {
     user_list.innerHTML = "";
     getBlockedList().then(() => {
-        for (const user of Object.values(blockedUsers)) {
-            for (const userKey in user) {
+        for (const user of blockedUsers) {
                 let nId = random(8);
-                let nun = user[userKey];
                 user_list.insertAdjacentHTML("beforeend", `<div>
-    <button id="${nId}" class="removebutton user_item rb">${nun}</button>
+    <button id="${nId}" class="removebutton user_item rb">${user}</button>
 </div>`)
                 let nn = document.getElementById(`${nId}`);
                 nn.addEventListener("click", (event) => {
@@ -77,7 +76,7 @@ let loadBlockList = () => {
                     console.log("removing", rmUserName);
                     removeUser(rmUserName);
                 })
-            }
+
         }
     });
 };
