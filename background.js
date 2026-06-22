@@ -19,7 +19,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     console.log("context onclick");
     if (info.menuItemId === "blockuser") {
         browser.tabs.sendMessage(tab.id, {
-            action: "find_element",
+            action: "target",
             targetElementId: info.targetElementId
         });
     }

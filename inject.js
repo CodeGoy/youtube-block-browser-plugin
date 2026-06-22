@@ -10,18 +10,26 @@ document.addEventListener("contextmenu", (event) => {
 }, true);
 
 browser.runtime.onMessage.addListener(async (message) => {
-    if (message.action === "find_element" && lastRightClickedElement) {
+    if (message.action === "target" && lastRightClickedElement) {
         let userToBlock = lastRightClickedElement.getAttribute("href");
         if (userToBlock == null) {
             return;
         }
-        const result = await browser.storage.local.get({ ["blocked_users"]: [] });
-        const currentArray = result["blocked_users"];
+        const result = await browser.storage.local.get({ [blockedUsersKey]: [] });
+        const currentArray = result[blockedUsersKey];
         if (!currentArray.includes(userToBlock)) {
             currentArray.push(userToBlock);
-            await browser.storage.local.set({ ["blocked_users"]: currentArray });
+            await browser.storage.local.set({ [blockedUsersKey]: currentArray });
         }
         lastRightClickedElement = null;
+        getBlockedList().then(() => {
+            clean();
+        });
+    }
+    if (message.action === "clean") {
+        getBlockedList().then(() => {
+            clean();
+        });
     }
 });
 
@@ -31,8 +39,8 @@ let clean = () => {
         let href = item.querySelector(".ytAttributedStringLink")?.getAttribute("href");
         if (!href) return;
         if (blockedUsers.includes(href)) {
-            console.log("blockedUsers includes:", href);
             item.remove();
+            console.log("removed post by", href);
         }
     });
 };
@@ -55,5 +63,5 @@ setInterval( () => {
             });
         }
     })
-}, 2500);
+}, 9001);
 

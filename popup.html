@@ -19,16 +19,39 @@
         }
         .user_item {
             background-color: black;
-            color: red;
+            color: white;
         }
         .pad {
             margin: 15px 1px 15px 2px;
+        }
+        #enable_script {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 1px solid red;
+            background-color: black;
+            border-radius: 4px;
+            cursor: pointer;
+            outline: none;
+            position: relative;
+        }
+        #enable_script:checked::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            width: 6px;
+            height: 14px;
+            border: solid white;
+            border-width: 0 1px 1px 0;
+            transform: rotate(45deg);
         }
     </style>
 </head>
 <body>
 <h2>YouTubeBlock</h2>
-<label for="enable_script">Enable<input id="enable_script" type="checkbox" placeholder="enable"></label>
+<button class="user_item rb" id="clean">Clean</button>
+<label style="float: right;" for="enable_script">loop<input class="rb user_item" id="enable_script" type="checkbox" placeholder="enable"></label>
 <p class="rb">Status: <span id="status">OFF</span></p>
 <div id="user_list" class="rb pad"></div>
 <button class="rb user_item" id="reset">Reset Storage</button>

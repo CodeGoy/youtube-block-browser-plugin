@@ -1,4 +1,5 @@
 console.log("starting popup", browser.runtime.getManifest().name, browser.runtime.getManifest().version)
+let clean = document.getElementById("clean");
 let reset = document.getElementById("reset");
 let status = document.getElementById("status");
 let user_list = document.getElementById("user_list");
@@ -79,6 +80,21 @@ let loadBlockList = () => {
         }
     });
 };
+
+clean.addEventListener("click", async () => {
+    try {
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (!tab) {
+            console.error("No active tab found.");
+            return;
+        }
+        const response = await browser.tabs.sendMessage(tab.id, {action: "clean"});
+
+        console.log("Reply received from tab:", response);
+    } catch (error) {
+        console.error("Error messaging tab:", error);
+    }
+})
 
 document.addEventListener("DOMContentLoaded",  () => {
     getEnabled().then((en) => {
