@@ -35,12 +35,9 @@ let clean = () => {
         } catch (e) {
             continue
         }
-        for (const user of Object.values(blockedUsers)) {
-            for (const userKey in user) {
-                if (user[userKey] === targetHref) {
-                    qsl[q].remove();
-                }
-            }
+        if (blockedUsers.includes(targetHref)) {
+            console.log("blockedUsers includes:", targetHref);
+            qsl[q].remove();
         }
     }
 };
@@ -51,7 +48,8 @@ let getEnabled = async () => {
 }
 
 let getBlockedList = async () => {
-    blockedUsers = await browser.storage.local.get({ [blockedUsersKey]: [] });
+    let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
+    blockedUsers = Object.values(bul)[0];
 }
 
 setInterval( () => {
