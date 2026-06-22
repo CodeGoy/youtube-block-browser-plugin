@@ -3,13 +3,12 @@ let reset = document.getElementById("reset");
 let status = document.getElementById("status");
 let user_list = document.getElementById("user_list");
 let enable_script_em = document.getElementById("enable_script");
-let blockedUsers = null;
 const blockedUsersKey = "blocked_users";
 const enabledKey = "enable_script";
 
 let getBlockedList = async () => {
     let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
-    blockedUsers = Object.values(bul)[0];
+    return Object.values(bul)[0];
 }
 
 let removeUser = (username) => {
@@ -64,7 +63,7 @@ let getEnabled = async () => {
 
 let loadBlockList = () => {
     user_list.innerHTML = "";
-    getBlockedList().then(() => {
+    getBlockedList().then((blockedUsers) => {
         for (const user of blockedUsers) {
                 let nId = random(8);
                 user_list.insertAdjacentHTML("beforeend", `<div>
