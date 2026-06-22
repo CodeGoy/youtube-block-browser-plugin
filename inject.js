@@ -11,8 +11,7 @@ document.addEventListener("contextmenu", (event) => {
 
 browser.runtime.onMessage.addListener(async (message) => {
     if (message.action === "find_element" && lastRightClickedElement) {
-        let parsedHref = lastRightClickedElement.getAttribute("href")
-        let userToBlock = parsedHref;
+        let userToBlock = lastRightClickedElement.getAttribute("href");
         if (userToBlock == null) {
             return;
         }
@@ -27,19 +26,15 @@ browser.runtime.onMessage.addListener(async (message) => {
 });
 
 let clean = () => {
-    let qsl = contents.getElementsByTagName('ytd-rich-item-renderer');
-    for (let q = 0; q < qsl.length; q++) {
-        let targetHref = null;
-        try {
-            targetHref = qsl[q].querySelector(".ytAttributedStringLink").getAttribute("href");
-        } catch (e) {
-            continue
+    let items = contents.querySelectorAll('ytd-rich-item-renderer');
+    items.forEach(item => {
+        let href = item.querySelector(".ytAttributedStringLink")?.getAttribute("href");
+        if (!href) return;
+        if (blockedUsers.includes(href)) {
+            console.log("blockedUsers includes:", href);
+            item.remove();
         }
-        if (blockedUsers.includes(targetHref)) {
-            console.log("blockedUsers includes:", targetHref);
-            qsl[q].remove();
-        }
-    }
+    });
 };
 
 let getEnabled = async () => {
