@@ -2,6 +2,9 @@
 <html>
 <head>
     <style>
+        html {
+            scrollbar-width: none;
+        }
         body {
             background-color: black;
             color: white;
@@ -18,15 +21,17 @@
             background-color: black;
             color: red;
         }
+        .pad {
+            margin: 15px 1px 15px 2px;
+        }
     </style>
 </head>
 <body>
 <h2>YouTubeBlock</h2>
 <label for="enable_script">Enable<input id="enable_script" type="checkbox" placeholder="enable"></label>
-<br>
-<button id="reset">Reset Storage</button>
 <p class="rb">Status: <span id="status">OFF</span></p>
-<div id="user_list" class="rb"></div>
+<div id="user_list" class="rb pad"></div>
+<button class="rb user_item" id="reset">Reset Storage</button>
 <script src="popup.js"></script>
 </body>
 </html>
