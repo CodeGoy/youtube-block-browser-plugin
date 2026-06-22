@@ -1,20 +1,27 @@
 let blockedUsers = null;
-console.log("starting block script")
+console.log("starting script", browser.runtime.getManifest().name, browser.runtime.getManifest().version)
 let lastRightClickedElement = null;
 let contents = document.getElementById("content");
+const blockedUsersKey = "blocked_users";
+const enabledKey = "enable_script";
 
 document.addEventListener("contextmenu", (event) => {
     lastRightClickedElement = event.target;
 }, true);
 
-browser.runtime.onMessage.addListener((message) => {
+browser.runtime.onMessage.addListener(async (message) => {
     if (message.action === "find_element" && lastRightClickedElement) {
         let parsedHref = lastRightClickedElement.getAttribute("href")
-        console.log("Cross-browser clicked element:", parsedHref);
-        browser.runtime.sendMessage({
-            action: "BLOCK_DATA",
-            data: parsedHref
-        })
+        let userToBlock = parsedHref;
+        if (userToBlock == null) {
+            return;
+        }
+        const result = await browser.storage.local.get({ ["blocked_users"]: [] });
+        const currentArray = result["blocked_users"];
+        if (!currentArray.includes(userToBlock)) {
+            currentArray.push(userToBlock);
+            await browser.storage.local.set({ ["blocked_users"]: currentArray });
+        }
         lastRightClickedElement = null;
     }
 });
@@ -31,31 +38,29 @@ let clean = () => {
         for (const user of Object.values(blockedUsers)) {
             for (const userKey in user) {
                 if (user[userKey] === targetHref) {
-                    console.log("Removing node:", q);
                     qsl[q].remove();
-                } else {
-                    //console.log("values do not match", user[userKey], targetHref);
                 }
             }
         }
     }
 };
 
-let getBlockedList = async () => {
-    blockedUsers  = await browser.storage.local.get({ ["blocked_users"]: [] });
+let getEnabled = async () => {
+    let enableObject = await browser.storage.local.get([enabledKey]);
+    return Object.values(enableObject)[0];
 }
 
-// TODO : run on mutations
-getBlockedList().then(r => {
-    setTimeout( () => {
-        clean();
-        console.log("Starting Loop Countdown......");
-        setInterval( () => {
+let getBlockedList = async () => {
+    blockedUsers = await browser.storage.local.get({ [blockedUsersKey]: [] });
+}
+
+setInterval( () => {
+    getEnabled().then((enableScript) => {
+        if (enableScript) {
             getBlockedList().then(() => {
-                console.log("cleaning");
                 clean();
             });
-        }, 3000);
-    }, 1000);
-});
+        }
+    })
+}, 2500);
 

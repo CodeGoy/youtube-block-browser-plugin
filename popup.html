@@ -3,8 +3,8 @@
 <head>
     <style>
         body {
-            background-color: #000;
-            color: #fff;
+            background-color: black;
+            color: white;
         }
         .rb {
             border: red solid 1px;
@@ -15,12 +15,15 @@
             height: fit-content;
         }
         .user_item {
-            
+            background-color: black;
+            color: red;
         }
     </style>
 </head>
 <body>
-<h2>Extension Menu</h2>
+<h2>YouTubeBlock</h2>
+<label for="enable_script">Enable<input id="enable_script" type="checkbox" placeholder="enable"></label>
+<br>
 <button id="reset">Reset Storage</button>
 <p class="rb">Status: <span id="status">OFF</span></p>
 <div id="user_list" class="rb"></div>
