@@ -6,6 +6,7 @@ let user_list = document.getElementById("user_list");
 let enable_script_em = document.getElementById("enable_script");
 const blockedUsersKey = "blocked_users";
 const enabledKey = "enable_script";
+const hideShortsOptionKey = "hide_shorts";
 
 let getBlockedList = async () => {
     let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
@@ -13,13 +14,11 @@ let getBlockedList = async () => {
 }
 
 let removeUser = (username) => {
-    console.log("Removing user:", username);
     browser.storage.local.get([blockedUsersKey]).then((result) => {
         let storedArray = result[blockedUsersKey] || [];
         const updatedArray = storedArray.filter(item => item !== username);
         return browser.storage.local.set({ [blockedUsersKey]: updatedArray });
     }).then(() => {
-        console.log("String removed successfully!");
         loadBlockList();
     }).catch((error) => {
         console.error("Error updating storage:", error);
@@ -30,11 +29,8 @@ let buttonFuncs = () => {
     const removeButtons = user_list.getElementsByClassName('removebutton');
     for (let i = 0; i < removeButtons.length; i++) {
         let crb = removeButtons[i]
-        //console.log(crb);
         crb.addEventListener('click', (event) => {
-            const buttonText = event.target.textContent;
-            //console.log(buttonText);
-            removeUser(buttonText);
+            removeUser(event.target.textContent);
         });
     }
 };
@@ -48,10 +44,22 @@ function random(len) {
     return result;
 }
 
-// enabled
 enable_script.addEventListener('click', () => {
     browser.storage.local.set({enable_script : enable_script_em.checked}).then(() => {
         getEnabled().then((isEnabledCheck) => {
+            console.log("enable", isEnabledCheck);
+        })
+    });
+})
+
+let getHideShorts = async () => {
+    let hideShortsObject = await browser.storage.local.get([hideShortsOptionKey]);
+    return Object.values(hideShortsObject)[0];
+}
+
+hide_shorts.addEventListener('click', () => {
+    browser.storage.local.set({hide_shorts : hide_shorts.checked}).then(() => {
+        getHideShorts.then((isEnabledCheck) => {
             console.log("enable", isEnabledCheck);
         })
     });
@@ -73,7 +81,6 @@ let loadBlockList = () => {
                 let nn = document.getElementById(`${nId}`);
                 nn.addEventListener("click", (event) => {
                     let rmUserName = event.target.textContent;
-                    console.log("removing", rmUserName);
                     removeUser(rmUserName);
                 })
 
@@ -88,9 +95,7 @@ clean.addEventListener("click", async () => {
             console.error("No active tab found.");
             return;
         }
-        const response = await browser.tabs.sendMessage(tab.id, {action: "clean"});
-
-        console.log("Reply received from tab:", response);
+        await browser.tabs.sendMessage(tab.id, {action: "clean"});
     } catch (error) {
         console.error("Error messaging tab:", error);
     }
@@ -100,10 +105,12 @@ document.addEventListener("DOMContentLoaded",  () => {
     getEnabled().then((en) => {
         enable_script.checked = en;
     });
+    getHideShorts().then((shorts) => {
+        hide_shorts.checked = shorts;
+    })
     loadBlockList()
     status.textContent = "Not Reset";
     reset.addEventListener("click", () => {
-        console.log("reset enabled");
         browser.storage.local.remove(blockedUsersKey);
         status.textContent = "Reset";
     })

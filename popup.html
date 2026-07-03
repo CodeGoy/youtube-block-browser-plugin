@@ -24,7 +24,7 @@
         .pad {
             margin: 15px 1px 15px 2px;
         }
-        #enable_script {
+        .check {
             appearance: none;
             -webkit-appearance: none;
             width: 20px;
@@ -36,7 +36,7 @@
             outline: none;
             position: relative;
         }
-        #enable_script:checked::after {
+        .check:checked::after {
             content: '';
             position: absolute;
             left: 5px;
@@ -51,7 +51,8 @@
 <body>
 <h2>YouTubeBlock</h2>
 <button class="user_item rb" id="clean">Clean</button>
-<label style="float: right;" for="enable_script">loop<input class="rb user_item" id="enable_script" type="checkbox" placeholder="enable"></label>
+<label style="float: right;" for="enable_script">loop<input class="rb user_item check" id="enable_script" type="checkbox" placeholder="enable"></label>
+<label style="float: right;" for="hide_shorts">hide shorts<input class="rb user_item check" id="hide_shorts" type="checkbox" placeholder="enable"></label>
 <p class="rb">Status: <span id="status">OFF</span></p>
 <div id="user_list" class="rb pad"></div>
 <button class="rb user_item" id="reset">Reset Storage</button>

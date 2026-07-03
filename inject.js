@@ -4,6 +4,10 @@ let lastRightClickedElement = null;
 let contents = document.getElementById("content");
 const blockedUsersKey = "blocked_users";
 const enabledKey = "enable_script";
+const youtubeItemKey = "ytd-rich-item-renderer";
+const youtubeSectionKey = "ytd-rich-section-renderer";
+const youtubeUserLinkKey = ".ytAttributedStringLink";
+const hideShortsOptionKey = "hide_shorts";
 
 document.addEventListener("contextmenu", (event) => {
     lastRightClickedElement = event.target;
@@ -34,16 +38,28 @@ browser.runtime.onMessage.addListener(async (message) => {
 });
 
 let clean = () => {
-    let items = contents.querySelectorAll('ytd-rich-item-renderer');
+    let items = contents.querySelectorAll(youtubeItemKey);
     items.forEach(item => {
-        let href = item.querySelector(".ytAttributedStringLink")?.getAttribute("href");
+        let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
         if (!href) return;
         if (blockedUsers.includes(href)) {
             item.remove();
-            console.log("removed post by", href);
+        }
+    });
+    getHideShorts().then(value => {
+        console.log(hideShortsOptionKey, value);
+        if (value) {
+            document.querySelectorAll(youtubeSectionKey).forEach(element => {
+                element.remove();
+            });
         }
     });
 };
+
+let getHideShorts = async () => {
+    let enableObject = await browser.storage.local.get([hideShortsOptionKey]);
+    return Object.values(enableObject)[0];
+}
 
 let getEnabled = async () => {
     let enableObject = await browser.storage.local.get([enabledKey]);
@@ -64,4 +80,3 @@ setInterval( () => {
         }
     })
 }, 9001);
-
