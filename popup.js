@@ -1,4 +1,11 @@
-console.log("starting popup", browser.runtime.getManifest().name, browser.runtime.getManifest().version)
+let version = browser.runtime.getManifest().version;
+let appName = browser.runtime.getManifest().name;
+console.log("starting popup", appName, version)
+let header = document.getElementById("header");
+header.innerText = `${appName} ${version}`;
+let hide_shorts = document.getElementById("hide_shorts");
+let downloadButton = document.getElementById("download");
+let loadList = document.getElementById("load_list");
 let clean = document.getElementById("clean");
 let reset = document.getElementById("reset");
 let status = document.getElementById("status");
@@ -35,7 +42,7 @@ let buttonFuncs = () => {
     }
 };
 
-function random(len) {
+let random = (len) => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < len; i++) {
@@ -44,7 +51,7 @@ function random(len) {
     return result;
 }
 
-enable_script.addEventListener('click', () => {
+enable_script_em.addEventListener('click', () => {
     browser.storage.local.set({enable_script : enable_script_em.checked}).then(() => {
         getEnabled().then((isEnabledCheck) => {
             console.log("enable", isEnabledCheck);
@@ -74,16 +81,13 @@ let loadBlockList = () => {
     user_list.innerHTML = "";
     getBlockedList().then((blockedUsers) => {
         for (const user of blockedUsers) {
-                let nId = random(8);
-                user_list.insertAdjacentHTML("beforeend", `<div>
-    <button id="${nId}" class="removebutton user_item rb">${user}</button>
-</div>`)
-                let nn = document.getElementById(`${nId}`);
-                nn.addEventListener("click", (event) => {
-                    let rmUserName = event.target.textContent;
-                    removeUser(rmUserName);
-                })
-
+            let nId = random(8);
+            user_list.insertAdjacentHTML("beforeend", `<div><button id="${nId}" class="removebutton user_item rb">${user}</button></div>`)
+            let nn = document.getElementById(`${nId}`);
+            nn.addEventListener("click", (event) => {
+                let rmUserName = event.target.textContent;
+                removeUser(rmUserName);
+            })
         }
     });
 };
@@ -101,9 +105,31 @@ clean.addEventListener("click", async () => {
     }
 })
 
+downloadButton.addEventListener("click", () => {
+    getBlockedList().then((blockedUsers) => {
+        let bu = JSON.stringify(blockedUsers);
+        const blob = new Blob([bu], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'blocked-user-list.json';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    })
+})
+
+loadList.addEventListener("click", () => {
+    browser.windows.create({
+        url: browser.runtime.getURL("load.html"),
+        type: "popup",
+        width: 400,
+        height: 600
+    });
+})
+
 document.addEventListener("DOMContentLoaded",  () => {
     getEnabled().then((en) => {
-        enable_script.checked = en;
+        enable_script_em.checked = en;
     });
     getHideShorts().then((shorts) => {
         hide_shorts.checked = shorts;

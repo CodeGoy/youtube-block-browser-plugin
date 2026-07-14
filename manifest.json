@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTubeBlock",
-  "version": "0.0.3",
+  "version": "0.0.8",
 
   "action": {
     "default_popup": "popup.html"

@@ -1,5 +1,5 @@
 let blockedUsers = null;
-console.log("starting script", browser.runtime.getManifest().name, browser.runtime.getManifest().version)
+console.log("starting script", browser.runtime.getManifest().name, browser.runtime.getManifest().version);
 let lastRightClickedElement = null;
 let contents = document.getElementById("content");
 const blockedUsersKey = "blocked_users";
@@ -38,22 +38,48 @@ browser.runtime.onMessage.addListener(async (message) => {
 });
 
 let clean = () => {
-    let items = contents.querySelectorAll(youtubeItemKey);
-    items.forEach(item => {
-        let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
-        if (!href) return;
-        if (blockedUsers.includes(href)) {
-            item.remove();
-        }
-    });
-    getHideShorts().then(value => {
-        console.log(hideShortsOptionKey, value);
-        if (value) {
-            document.querySelectorAll(youtubeSectionKey).forEach(element => {
-                element.remove();
+    let path = document.location.pathname;
+    switch (path) {
+        case "/":
+            contents.querySelectorAll(youtubeItemKey).forEach(item => {
+                let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
+                if (!href) return;
+                if (blockedUsers.includes(href)) {
+                    item.remove();
+                }
             });
-        }
-    });
+            getHideShorts().then(value => {
+                console.log(hideShortsOptionKey, value);
+                if (value) {
+                    document.querySelectorAll(youtubeSectionKey).forEach(element => {
+                        element.remove();
+                    });
+                }
+            });
+            break;
+        case "/results":
+            // TODO : fix
+            contents.querySelectorAll("ytd-video-renderer").forEach(item => {
+                let channelName = item.querySelector(".yt-simple-endpoint")?.getAttribute("href");
+                console.log(channelName);
+                //if (!channelName) return;
+                // if (blockedChannels.includes(channelName)) {item.remove();}
+            });
+            break;
+        case "/watch":
+            // TODO : Need to get the channel title on add, and hold it in another array for lookup, change storage to a map.
+            contents.querySelectorAll("yt-lockup-view-model").forEach(item => {
+                let channelName = item.querySelector(".ytAttributedStringHost").textContent;
+                console.log(channelName);
+                //if (!channelName) return;
+                // if (blockedChannels.includes(channelName)) {item.remove();}
+            });
+            break;
+
+        default:
+            console.log("unknown path", path);
+            break;
+    }
 };
 
 let getHideShorts = async () => {
