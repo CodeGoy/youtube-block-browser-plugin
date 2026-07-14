@@ -1,5 +1,8 @@
+let version = browser.runtime.getManifest().version;
+let appName = browser.runtime.getManifest().name;
+console.log("starting script", appName, version)
+
 let blockedUsers = null;
-console.log("starting script", browser.runtime.getManifest().name, browser.runtime.getManifest().version);
 let lastRightClickedElement = null;
 let contents = document.getElementById("content");
 const blockedUsersKey = "blocked_users";

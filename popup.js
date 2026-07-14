@@ -1,6 +1,7 @@
 let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
 console.log("starting popup", appName, version)
+
 let header = document.getElementById("header");
 header.innerText = `${appName} ${version}`;
 let hide_shorts = document.getElementById("hide_shorts");
@@ -51,26 +52,10 @@ let random = (len) => {
     return result;
 }
 
-enable_script_em.addEventListener('click', () => {
-    browser.storage.local.set({enable_script : enable_script_em.checked}).then(() => {
-        getEnabled().then((isEnabledCheck) => {
-            console.log("enable", isEnabledCheck);
-        })
-    });
-})
-
 let getHideShorts = async () => {
     let hideShortsObject = await browser.storage.local.get([hideShortsOptionKey]);
     return Object.values(hideShortsObject)[0];
 }
-
-hide_shorts.addEventListener('click', () => {
-    browser.storage.local.set({hide_shorts : hide_shorts.checked}).then(() => {
-        getHideShorts.then((isEnabledCheck) => {
-            console.log("enable", isEnabledCheck);
-        })
-    });
-})
 
 let getEnabled = async () => {
     let enableObject = await browser.storage.local.get([enabledKey]);
@@ -92,41 +77,6 @@ let loadBlockList = () => {
     });
 };
 
-clean.addEventListener("click", async () => {
-    try {
-        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-        if (!tab) {
-            console.error("No active tab found.");
-            return;
-        }
-        await browser.tabs.sendMessage(tab.id, {action: "clean"});
-    } catch (error) {
-        console.error("Error messaging tab:", error);
-    }
-})
-
-downloadButton.addEventListener("click", () => {
-    getBlockedList().then((blockedUsers) => {
-        let bu = JSON.stringify(blockedUsers);
-        const blob = new Blob([bu], { type: 'application/json' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'blocked-user-list.json';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    })
-})
-
-loadList.addEventListener("click", () => {
-    browser.windows.create({
-        url: browser.runtime.getURL("load.html"),
-        type: "popup",
-        width: 400,
-        height: 600
-    });
-})
-
 document.addEventListener("DOMContentLoaded",  () => {
     getEnabled().then((en) => {
         enable_script_em.checked = en;
@@ -139,6 +89,54 @@ document.addEventListener("DOMContentLoaded",  () => {
     reset.addEventListener("click", () => {
         browser.storage.local.remove(blockedUsersKey);
         status.textContent = "Reset";
+        loadBlockList();
+
+    })
+    clean.addEventListener("click", async () => {
+        try {
+            const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+            if (!tab) {
+                console.error("No active tab found.");
+                return;
+            }
+            await browser.tabs.sendMessage(tab.id, {action: "clean"});
+        } catch (error) {
+            console.error("Error messaging tab:", error);
+        }
+    })
+    downloadButton.addEventListener("click", () => {
+        getBlockedList().then((blockedUsers) => {
+            let bu = JSON.stringify(blockedUsers);
+            const blob = new Blob([bu], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'blocked-user-list.json';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        })
+    })
+    loadList.addEventListener("click", () => {
+        browser.windows.create({
+            url: browser.runtime.getURL("load.html"),
+            type: "popup",
+            width: 400,
+            height: 400,
+        });
+    })
+    enable_script_em.addEventListener('click', () => {
+        browser.storage.local.set({enable_script : enable_script_em.checked}).then(() => {
+            getEnabled().then((isEnabledCheck) => {
+                console.log("enable", isEnabledCheck);
+            })
+        });
+    })
+    hide_shorts.addEventListener('click', () => {
+        browser.storage.local.set({hide_shorts : hide_shorts.checked}).then(() => {
+            getHideShorts.then((isEnabledCheck) => {
+                console.log("enable", isEnabledCheck);
+            })
+        });
     })
     buttonFuncs();
 });

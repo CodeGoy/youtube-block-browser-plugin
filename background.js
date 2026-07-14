@@ -1,4 +1,7 @@
-console.log("starting background service", browser.runtime.getManifest().name, browser.runtime.getManifest().version)
+let version = browser.runtime.getManifest().version;
+let appName = browser.runtime.getManifest().name;
+console.log("starting background service", appName, version)
+
 console.log("installing contextMenu")
 browser.contextMenus.remove("blockuser")
 browser.contextMenus.create({
