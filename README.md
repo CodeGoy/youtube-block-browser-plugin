@@ -1,5 +1,14 @@
 # Youtube Block
 
-Block channels from appearing on youtube homepage.  
+Block channels from appearing on youtube homepage(searchResults and watch page... eventually).
 
+* Remove "shorts" sections from feeds
+* save block list to file and reload list
 
+## use
+
+This Extension creates a contextMenu item...
+
+1) right click on the channel link under video thumbnail
+2) choose the "BlockUser" option
+3) watch all videos from the blocked channel disappear

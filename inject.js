@@ -12,9 +12,6 @@ const youtubeUserLinkKey = ".ytAttributedStringLink";
 const hideShortsOptionKey = "hide_shorts";
 let updateTimeout = null;
 
-
-
-
 browser.runtime.onMessage.addListener(async (message) => {
     if (message.action === "clean") {
         getBlockedList().then(() => {
@@ -62,7 +59,6 @@ let clean = () => {
                 // if (blockedChannels.includes(channelName)) {item.remove();}
             });
             break;
-
         default:
             console.log("unknown path", path);
             break;
@@ -114,7 +110,6 @@ const observer = new MutationObserver((mutationList, observer) => {
 });
 
 observer.observe(contents, { childList: true, subtree: true });
-
 
 // TODO : onload
 getBlockedList().then(() => {
