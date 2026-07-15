@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTubeBlock",
-  "version": "0.0.12",
+  "version": "0.0.16",
 
   "action": {
     "default_popup": "popup.html"
@@ -28,7 +28,7 @@
 
   "content_scripts": [
     {
-      "matches": ["https://*.youtube.com/*"],
+      "matches": ["https://www.youtube.com/", "https://www.youtube.com/watch*", "https://www.youtube.com/results*"],
       "js": ["inject.js"]
     }
   ],

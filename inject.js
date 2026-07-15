@@ -10,6 +10,10 @@ const youtubeItemKey = "ytd-rich-item-renderer";
 const youtubeSectionKey = "ytd-rich-section-renderer";
 const youtubeUserLinkKey = ".ytAttributedStringLink";
 const hideShortsOptionKey = "hide_shorts";
+let updateTimeout = null;
+
+
+
 
 browser.runtime.onMessage.addListener(async (message) => {
     if (message.action === "clean") {
@@ -80,20 +84,39 @@ let getBlockedList = async () => {
     blockedUsers = Object.values(bul)[0];
 }
 
-setInterval( () => {
-    getEnabled().then((enableScript) => {
-        if (enableScript) {
-            getBlockedList().then(() => {
-                clean();
-            });
-        }
-    })
-}, 9001);
-
 browser.storage.onChanged.addListener((changes, areaName) => {
     if (changes.hasOwnProperty(blockedUsersKey)) {
         getBlockedList().then(() => {
             clean();
         });
     }
+});
+
+const observer = new MutationObserver((mutationList, observer) => {
+    getEnabled().then((enableScript) => {
+        if (enableScript) {
+            for (const mutation of mutationList) {
+                if (mutation.type === "childList") {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1 && node.matches(youtubeItemKey) && updateTimeout == null) {
+                            updateTimeout = setTimeout(() => {
+                                getBlockedList().then(() => {
+                                    clean();
+                                });
+                                updateTimeout = null;
+                            }, 500);
+                        }
+                    });
+                }
+            }
+        }
+    })
+});
+
+observer.observe(contents, { childList: true, subtree: true });
+
+
+// TODO : onload
+getBlockedList().then(() => {
+    clean();
 });
