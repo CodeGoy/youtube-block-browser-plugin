@@ -2,6 +2,8 @@ let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
 console.log("starting background service", appName, version)
 
+const blockedUsersKey = "blocked_users";
+
 console.log("installing contextMenu")
 browser.contextMenus.remove("blockuser")
 browser.contextMenus.create({
@@ -19,11 +21,16 @@ browser.contextMenus.create({
 });
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
-    console.log("context onclick");
     if (info.menuItemId === "blockuser") {
-        browser.tabs.sendMessage(tab.id, {
-            action: "target",
-            targetElementId: info.targetElementId
-        });
+        // TODO :  check if event.info is a channel link
+        let userToBlock = "/" + info.linkUrl.replaceAll(info.pageUrl, "");
+        const result = await browser.storage.local.get({[blockedUsersKey]: []});
+        const currentArray = result[blockedUsersKey];
+        if (!currentArray.includes(userToBlock)) {
+            currentArray.push(userToBlock);
+            await browser.storage.local.set({[blockedUsersKey]: currentArray});
+        } else {
+            console.log("Channel is already blocked");
+        }
     }
 });
