@@ -90,7 +90,6 @@ document.addEventListener("DOMContentLoaded",  () => {
         browser.storage.local.remove(blockedUsersKey);
         status.textContent = "Reset";
         loadBlockList();
-
     })
     clean.addEventListener("click", async () => {
         try {

@@ -1,16 +1,20 @@
 let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
-console.log("starting background service", appName, version)
+console.log("Starting background service:", appName, version)
 
 const blockedUsersKey = "blocked_users";
 
-console.log("installing contextMenu")
+console.log("Installing contextMenu:", appName)
 browser.contextMenus.remove("blockuser")
 browser.contextMenus.create({
     id: "blockuser",
     title: "BlockUser",
     contexts: ["link"],
-    documentUrlPatterns: ["https://*.youtube.com/*"]
+    documentUrlPatterns: [
+        "https://www.youtube.com/",
+        "https://www.youtube.com/watch*", // TODO : ///////////////////
+        "https://www.youtube.com/results*",
+    ],
 }, () => {
     console.log("context menu status");
     if (browser.runtime.lastError) {
@@ -22,8 +26,7 @@ browser.contextMenus.create({
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "blockuser") {
-        // TODO :  check if event.info is a channel link
-        let userToBlock = "/" + info.linkUrl.replaceAll(info.pageUrl, "");
+        let userToBlock = info.linkUrl.replaceAll("https://www.youtube.com", "");
         const result = await browser.storage.local.get({[blockedUsersKey]: []});
         const currentArray = result[blockedUsersKey];
         if (!currentArray.includes(userToBlock)) {

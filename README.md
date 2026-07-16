@@ -1,9 +1,10 @@
 # Youtube Block
 
-Block channels from appearing on youtube homepage(searchResults and watch page... eventually).
+Block channels from appearing on youtube homepage and search results (watch page... eventually).
 
 * Remove "shorts" sections from feeds
 * save block list to file and reload list
+* removes collabs (any element lookup that returns null or undefined)
 
 ## use
 

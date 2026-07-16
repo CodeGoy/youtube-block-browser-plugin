@@ -12,59 +12,6 @@ const youtubeUserLinkKey = ".ytAttributedStringLink";
 const hideShortsOptionKey = "hide_shorts";
 let updateTimeout = null;
 
-browser.runtime.onMessage.addListener(async (message) => {
-    if (message.action === "clean") {
-        getBlockedList().then(() => {
-            clean();
-        });
-    }
-});
-
-let clean = () => {
-    let path = document.location.pathname;
-    switch (path) {
-        case "/":
-            contents.querySelectorAll(youtubeItemKey).forEach(item => {
-                let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
-                if (!href) return;
-                if (blockedUsers.includes(href)) {
-                    item.remove();
-                }
-            });
-            getHideShorts().then(value => {
-                if (value) {
-                    document.querySelectorAll(youtubeSectionKey).forEach(element => {
-                        element.remove();
-                    });
-                }
-            });
-            break;
-        case "/results":
-            contents.querySelectorAll("ytd-video-renderer").forEach(item => {
-                let channel_name  = item.querySelector("ytd-channel-name");
-                let channelName = channel_name.querySelector(".yt-simple-endpoint").getAttribute("href");
-                if (blockedUsers.includes(channelName)) {
-                    // TODO : fix
-                    item.remove();
-                }
-            });
-            break;
-        case "/watch":
-            // the  /Watch endpoint does not use channel links for channel name...
-            // TODO : Need to get the channel title on add, and hold it in another array for lookup, change storage to a map.
-            contents.querySelectorAll("yt-lockup-view-model").forEach(item => {
-                let channelName = item.querySelector(".ytAttributedStringHost").textContent;
-                console.log(channelName);
-                //if (!channelName) return;
-                // if (blockedChannels.includes(channelName)) {item.remove();}
-            });
-            break;
-        default:
-            console.log("unknown path", path);
-            break;
-    }
-};
-
 let getHideShorts = async () => {
     let enableObject = await browser.storage.local.get([hideShortsOptionKey]);
     return Object.values(enableObject)[0];
@@ -80,6 +27,69 @@ let getBlockedList = async () => {
     blockedUsers = Object.values(bul)[0];
 }
 
+let clean = () => {
+    let path = document.location.pathname;
+    switch (path) {
+        case "/":
+            contents.querySelectorAll(youtubeItemKey).forEach(item => {
+                let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
+                if (!href || blockedUsers.includes(href)) {
+                    item.remove();
+                }
+            });
+            getHideShorts().then(value => {
+                if (value) {
+                    document.querySelectorAll(youtubeSectionKey).forEach(element => {
+                        element.remove();
+                    });
+                }
+            });
+            break;
+        case "/results":
+            contents.querySelectorAll("ytd-video-renderer").forEach(item => {
+                let textContainer = item.querySelector("#text-container");
+                let channelName = textContainer.querySelector(".yt-simple-endpoint").getAttribute("href");
+                console.log("channelName", channelName);
+                if (blockedUsers.includes(channelName)) {
+                    console.log("blocked channel", channelName);
+                    item.remove();
+                }
+            });
+            break;
+        case "/watch":
+            // the  /Watch endpoint does not use channel links for channel name...
+            // TODO : Need to get the channel title on add, and hold it in another array for lookup, change storage to a map.
+
+            ////*\/*\\\\
+            contents.querySelectorAll("yt-lockup-view-model").forEach(item => {
+                // ytContentMetadataViewModelMetadataRow
+                let parent = item.querySelector(".ytContentMetadataViewModelMetadataRow")
+                let channelTitle = parent.querySelector(".ytAttributedStringHost").innerText;
+                if (channelTitle.includes(" • ")) {
+                    console.log("removing youtube slop element")
+                    item.remove();
+                }
+                // TODO : lookup channel title
+                // if (!channelTitle) return;
+                // if (blockedChannels.includes(channelTitle)) {item.remove();}
+            });
+            ////*\/*\\\\
+            console.log("TODO : fix this")
+            break;
+        default:
+            console.log("unknown path", path);
+            break;
+    }
+};
+
+browser.runtime.onMessage.addListener(async (message) => {
+    if (message.action === "clean") {
+        getBlockedList().then(() => {
+            clean();
+        });
+    }
+});
+
 browser.storage.onChanged.addListener((changes, areaName) => {
     if (changes.hasOwnProperty(blockedUsersKey)) {
         getBlockedList().then(() => {
@@ -93,16 +103,18 @@ const observer = new MutationObserver((mutationList, observer) => {
         if (enableScript) {
             for (const mutation of mutationList) {
                 if (mutation.type === "childList") {
-                    mutation.addedNodes.forEach(node => {
-                        if (node.nodeType === 1 && node.matches(youtubeItemKey) && updateTimeout == null) {
+                    let mutations = mutation.addedNodes;
+                    for (let i = 0; i < mutations.length; i++) {
+                        if (mutations[i].nodeType === 1 && mutations[i].matches(youtubeItemKey) && updateTimeout == null) {
                             updateTimeout = setTimeout(() => {
                                 getBlockedList().then(() => {
                                     clean();
                                 });
                                 updateTimeout = null;
                             }, 500);
+                            break;
                         }
-                    });
+                    }
                 }
             }
         }
