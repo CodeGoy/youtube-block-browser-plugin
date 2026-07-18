@@ -33,6 +33,7 @@ let clean = () => {
         case "/":
             contents.querySelectorAll(youtubeItemKey).forEach(item => {
                 let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
+                // TODO : if no href, get channelTitle and check against channelTitle array
                 if (!href || blockedUsers.includes(href)) {
                     item.remove();
                 }
@@ -59,10 +60,8 @@ let clean = () => {
         case "/watch":
             // the  /Watch endpoint does not use channel links for channel name...
             // TODO : Need to get the channel title on add, and hold it in another array for lookup, change storage to a map.
-
             ////*\/*\\\\
             contents.querySelectorAll("yt-lockup-view-model").forEach(item => {
-                // ytContentMetadataViewModelMetadataRow
                 let parent = item.querySelector(".ytContentMetadataViewModelMetadataRow")
                 let channelTitle = parent.querySelector(".ytAttributedStringHost").innerText;
                 if (channelTitle.includes(" • ")) {

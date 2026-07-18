@@ -9,7 +9,6 @@ let downloadButton = document.getElementById("download");
 let loadList = document.getElementById("load_list");
 let clean = document.getElementById("clean");
 let reset = document.getElementById("reset");
-let status = document.getElementById("status");
 let user_list = document.getElementById("user_list");
 let enable_script_em = document.getElementById("enable_script");
 let show_list = document.getElementById("show_list");
@@ -19,10 +18,11 @@ const enabledKey = "enable_script";
 const hideShortsOptionKey = "hide_shorts";
 
 show_list.addEventListener("click", () => {
-    console.log("list toggle", user_list.classList);
     if (user_list.classList.contains("hide_list")) {
+        show_list.innerHTML = "Hide List";
         user_list.classList.remove("hide_list");
     } else {
+        show_list.innerHTML = "Show List";
         user_list.classList.add("hide_list");
     }
 })
@@ -97,10 +97,8 @@ document.addEventListener("DOMContentLoaded",  () => {
         hide_shorts.checked = shorts;
     })
     loadBlockList()
-    status.textContent = "Not Reset";
     reset.addEventListener("click", () => {
         browser.storage.local.remove(blockedUsersKey);
-        status.textContent = "Reset";
         loadBlockList();
     })
     clean.addEventListener("click", async () => {

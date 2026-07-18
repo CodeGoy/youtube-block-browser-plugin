@@ -26,6 +26,7 @@ browser.contextMenus.create({
 
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "blockuser") {
+        // TODO : get channelTitle and save to channelTitle array
         let userToBlock = info.linkUrl.replaceAll("https://www.youtube.com", "");
         const result = await browser.storage.local.get({[blockedUsersKey]: []});
         const currentArray = result[blockedUsersKey];
