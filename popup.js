@@ -12,9 +12,20 @@ let reset = document.getElementById("reset");
 let status = document.getElementById("status");
 let user_list = document.getElementById("user_list");
 let enable_script_em = document.getElementById("enable_script");
+let show_list = document.getElementById("show_list");
+let array_length = document.getElementById("array_length");
 const blockedUsersKey = "blocked_users";
 const enabledKey = "enable_script";
 const hideShortsOptionKey = "hide_shorts";
+
+show_list.addEventListener("click", () => {
+    console.log("list toggle", user_list.classList);
+    if (user_list.classList.contains("hide_list")) {
+        user_list.classList.remove("hide_list");
+    } else {
+        user_list.classList.add("hide_list");
+    }
+})
 
 let getBlockedList = async () => {
     let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
@@ -65,6 +76,7 @@ let getEnabled = async () => {
 let loadBlockList = () => {
     user_list.innerHTML = "";
     getBlockedList().then((blockedUsers) => {
+        array_length.innerText = "Blocked:" + blockedUsers.length;
         for (const user of blockedUsers) {
             let nId = random(8);
             user_list.insertAdjacentHTML("beforeend", `<div><button id="${nId}" class="removebutton user_item rb">${user}</button></div>`)

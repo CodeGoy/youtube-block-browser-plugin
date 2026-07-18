@@ -15,7 +15,7 @@
         #user_list {
             display: block;
             width: 100%;
-            height: fit-content;
+
         }
         .user_item {
             cursor: pointer;
@@ -47,18 +47,29 @@
             border-width: 0 1px 1px 0;
             transform: rotate(45deg);
         }
+        .hide_list {
+            height: 0;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
     <h2 id="header">.header</h2>
-    <button class="user_item rb" id="clean">Clean</button>
-    <label style="float: right;" for="enable_script">Enable<input class="rb user_item check" id="enable_script" type="checkbox" placeholder="enable"></label>
-    <label style="float: right;" for="hide_shorts">-Shorts<input class="rb user_item check" id="hide_shorts" type="checkbox" placeholder="enable"></label>
-    <p class="rb">Status: <span id="status">OFF</span></p>
-    <div id="user_list" class="rb pad"></div>
-    <button class="rb user_item" id="reset">Reset Storage</button>
-    <button class="rb user_item" id="download">Download list</button>
-    <button class="rb user_item" id="load_list">Load list</button>
+    <div class="pad">
+        <button class="user_item rb" id="clean">Clean</button>
+        <label style="float: right;" for="enable_script">Enable<input class="rb user_item check" id="enable_script" type="checkbox" placeholder="enable"></label>
+        <label style="float: right;" for="hide_shorts">-Shorts<input class="rb user_item check" id="hide_shorts" type="checkbox" placeholder="enable"></label>
+    </div>
+    <div class="pad">
+        <button class="user_item rb" id="show_list">Show List</button>
+        <span id="array_length">Blocked: 0</span>
+    </div>
+    <div id="user_list" class="rb pad hide_list"></div>
+    <div class="pad">
+        <button class="rb user_item" id="reset">Reset Storage</button>
+        <button class="rb user_item" id="download">Download list</button>
+        <button class="rb user_item" id="load_list">Load list</button>
+    </div>
     <script src="popup.js"></script>
 </body>
 </html>
