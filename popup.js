@@ -16,16 +16,7 @@ let array_length = document.getElementById("array_length");
 const blockedUsersKey = "blocked_users";
 const enabledKey = "enable_script";
 const hideShortsOptionKey = "hide_shorts";
-
-show_list.addEventListener("click", () => {
-    if (user_list.classList.contains("hide_list")) {
-        show_list.innerHTML = "Hide List";
-        user_list.classList.remove("hide_list");
-    } else {
-        show_list.innerHTML = "Show List";
-        user_list.classList.add("hide_list");
-    }
-})
+let resetConfirmation = 0;
 
 let getBlockedList = async () => {
     let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
@@ -98,8 +89,27 @@ document.addEventListener("DOMContentLoaded",  () => {
     })
     loadBlockList()
     reset.addEventListener("click", () => {
-        browser.storage.local.remove(blockedUsersKey);
-        loadBlockList();
+        switch (resetConfirmation) {
+            case 0:
+                resetConfirmation++;
+                reset.innerText = "Really????????";
+                break;
+            case 1:
+                resetConfirmation = 0;
+                reset.innerText = "Storage Reset";
+                browser.storage.local.remove(blockedUsersKey);
+                loadBlockList();
+                break;
+        }
+    })
+    show_list.addEventListener("click", () => {
+        if (user_list.classList.contains("hide_list")) {
+            show_list.innerHTML = "Hide List";
+            user_list.classList.remove("hide_list");
+        } else {
+            show_list.innerHTML = "Show List";
+            user_list.classList.add("hide_list");
+        }
     })
     clean.addEventListener("click", async () => {
         try {
