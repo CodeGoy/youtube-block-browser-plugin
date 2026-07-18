@@ -12,7 +12,7 @@ browser.contextMenus.create({
     contexts: ["link"],
     documentUrlPatterns: [
         "https://www.youtube.com/",
-        "https://www.youtube.com/watch*", // TODO : ///////////////////
+        "https://www.youtube.com/watch*",
         "https://www.youtube.com/results*",
     ],
 }, () => {
@@ -28,13 +28,17 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "blockuser") {
         // TODO : get channelTitle and save to channelTitle array
         let userToBlock = info.linkUrl.replaceAll("https://www.youtube.com", "");
-        const result = await browser.storage.local.get({[blockedUsersKey]: []});
-        const currentArray = result[blockedUsersKey];
-        if (!currentArray.includes(userToBlock)) {
-            currentArray.push(userToBlock);
-            await browser.storage.local.set({[blockedUsersKey]: currentArray});
+        if (userToBlock.startsWith("/@") || userToBlock.startsWith("/channel/")) {
+            const result = await browser.storage.local.get({[blockedUsersKey]: []});
+            const currentArray = result[blockedUsersKey];
+            if (!currentArray.includes(userToBlock)) {
+                currentArray.push(userToBlock);
+                await browser.storage.local.set({[blockedUsersKey]: currentArray});
+            } else {
+                console.log("Channel is already blocked");
+            }
         } else {
-            console.log("Channel is already blocked");
+            console.log("unknown url pattern:" + info.linkUrl);
         }
     }
 });
