@@ -2,9 +2,10 @@ let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
 console.log("starting script", appName, version)
 
-let blockedUsers = null;
+let blockedChannels = [];
+let blockedUsers = [];
 let contents = document.getElementById("content");
-const blockedUsersKey = "blocked_users";
+const blockDataKey = "block_data";
 const enabledKey = "enable_script";
 const youtubeItemKey = "ytd-rich-item-renderer";
 const youtubeSectionKey = "ytd-rich-section-renderer";
@@ -23,8 +24,14 @@ let getEnabled = async () => {
 }
 
 let getBlockedList = async () => {
-    let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
-    blockedUsers = Object.values(bul)[0];
+    blockedChannels = [];
+    blockedUsers = [];
+    let bul = await browser.storage.local.get({ [blockDataKey]: [] });
+    Object.values(bul)[0].forEach(b => {
+        let bs = b.split("|");
+        blockedChannels.push(bs[0]);
+        blockedUsers.push(bs[1]);
+    })
 }
 
 let clean = () => {
@@ -33,7 +40,6 @@ let clean = () => {
         case "/":
             contents.querySelectorAll(youtubeItemKey).forEach(item => {
                 let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
-                // TODO : if no href, get channelTitle and check against channelTitle array
                 if (!href || blockedUsers.includes(href)) {
                     item.remove();
                 }
@@ -50,30 +56,24 @@ let clean = () => {
             contents.querySelectorAll("ytd-video-renderer").forEach(item => {
                 let textContainer = item.querySelector("#text-container");
                 let channelName = textContainer.querySelector(".yt-simple-endpoint").getAttribute("href");
-                console.log("channelName", channelName);
                 if (blockedUsers.includes(channelName)) {
-                    console.log("blocked channel", channelName);
                     item.remove();
                 }
             });
             break;
         case "/watch":
-            // the  /Watch endpoint does not use channel links for channel name...
-            // TODO : Need to get the channel title on add, and hold it in another array for lookup, change storage to a map.
-            ////*\/*\\\\
             contents.querySelectorAll("yt-lockup-view-model").forEach(item => {
                 let parent = item.querySelector(".ytContentMetadataViewModelMetadataRow")
                 let channelTitle = parent.querySelector(".ytAttributedStringHost").innerText;
+                getBlockedList().then(() => {
+                    if (blockedChannels.includes(channelTitle)) {
+                        item.remove();
+                    }
+                })
                 if (channelTitle.includes(" • ")) {
-                    console.log("removing youtube slop element")
                     item.remove();
                 }
-                // TODO : lookup channel title
-                // if (!channelTitle) return;
-                // if (blockedChannels.includes(channelTitle)) {item.remove();}
             });
-            ////*\/*\\\\
-            console.log("TODO : fix this")
             break;
         default:
             console.log("unknown path", path);
@@ -90,7 +90,7 @@ browser.runtime.onMessage.addListener(async (message) => {
 });
 
 browser.storage.onChanged.addListener((changes, areaName) => {
-    if (changes.hasOwnProperty(blockedUsersKey)) {
+    if (changes.hasOwnProperty(blockDataKey)) {
         getBlockedList().then(() => {
             clean();
         });

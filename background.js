@@ -2,7 +2,7 @@ let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
 console.log("Starting background service:", appName, version)
 
-const blockedUsersKey = "blocked_users";
+const blockDataKey = "block_data";
 
 console.log("Installing contextMenu:", appName)
 browser.contextMenus.remove("blockuser")
@@ -24,16 +24,18 @@ browser.contextMenus.create({
     }
 });
 
+
+
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "blockuser") {
-        // TODO : get channelTitle and save to channelTitle array
         let userToBlock = info.linkUrl.replaceAll("https://www.youtube.com", "");
         if (userToBlock.startsWith("/@") || userToBlock.startsWith("/channel/")) {
-            const result = await browser.storage.local.get({[blockedUsersKey]: []});
-            const currentArray = result[blockedUsersKey];
-            if (!currentArray.includes(userToBlock)) {
-                currentArray.push(userToBlock);
-                await browser.storage.local.set({[blockedUsersKey]: currentArray});
+            let channelTitle = info.linkText;
+            const blockDataMapResult = await browser.storage.local.get({[blockDataKey]: []});
+            const blockDataArray = blockDataMapResult[blockDataKey];
+            if (!blockDataArray.includes(userToBlock)) {
+                blockDataArray.push(channelTitle+"|"+userToBlock);
+                await browser.storage.local.set({[blockDataKey]: blockDataArray});
             } else {
                 console.log("Channel is already blocked");
             }

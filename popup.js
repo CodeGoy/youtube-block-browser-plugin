@@ -2,32 +2,33 @@ let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
 console.log("starting popup", appName, version)
 
-let header = document.getElementById("header");
-header.innerText = `${appName} ${version}`;
+let enable_script_em = document.getElementById("enable_script");
+let array_length = document.getElementById("array_length");
 let hide_shorts = document.getElementById("hide_shorts");
 let downloadButton = document.getElementById("download");
+let user_list = document.getElementById("user_list");
+let show_list = document.getElementById("show_list");
 let loadList = document.getElementById("load_list");
+let header = document.getElementById("header");
 let clean = document.getElementById("clean");
 let reset = document.getElementById("reset");
-let user_list = document.getElementById("user_list");
-let enable_script_em = document.getElementById("enable_script");
-let show_list = document.getElementById("show_list");
-let array_length = document.getElementById("array_length");
-const blockedUsersKey = "blocked_users";
-const enabledKey = "enable_script";
 const hideShortsOptionKey = "hide_shorts";
+const enabledKey = "enable_script";
+const blockDataKey = "block_data";
 let resetConfirmation = 0;
 
+header.innerText = `${appName} ${version}`;
+
 let getBlockedList = async () => {
-    let bul = await browser.storage.local.get({ [blockedUsersKey]: [] });
-    return Object.values(bul)[0];
+    let bul = await browser.storage.local.get({ [blockDataKey]: [] });
+    return  Object.values(bul)[0];
 }
 
 let removeUser = (username) => {
-    browser.storage.local.get([blockedUsersKey]).then((result) => {
-        let storedArray = result[blockedUsersKey] || [];
+    browser.storage.local.get([blockDataKey]).then((result) => {
+        let storedArray = result[blockDataKey] || [];
         const updatedArray = storedArray.filter(item => item !== username);
-        return browser.storage.local.set({ [blockedUsersKey]: updatedArray });
+        return browser.storage.local.set({ [blockDataKey]: updatedArray });
     }).then(() => {
         loadBlockList();
     }).catch((error) => {
@@ -97,7 +98,7 @@ document.addEventListener("DOMContentLoaded",  () => {
             case 1:
                 resetConfirmation = 0;
                 reset.innerText = "Storage Reset";
-                browser.storage.local.remove(blockedUsersKey);
+                browser.storage.local.remove(blockDataKey);
                 loadBlockList();
                 break;
         }
