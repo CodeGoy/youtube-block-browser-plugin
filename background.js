@@ -24,8 +24,6 @@ browser.contextMenus.create({
     }
 });
 
-
-
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "blockuser") {
         let userToBlock = info.linkUrl.replaceAll("https://www.youtube.com", "");

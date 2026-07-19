@@ -46,15 +46,6 @@ let buttonFuncs = () => {
     }
 };
 
-let random = (len) => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < len; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
-
 let getHideShorts = async () => {
     let hideShortsObject = await browser.storage.local.get([hideShortsOptionKey]);
     return Object.values(hideShortsObject)[0];
@@ -70,13 +61,15 @@ let loadBlockList = () => {
     getBlockedList().then((blockedUsers) => {
         array_length.innerText = "Blocked:" + blockedUsers.length;
         for (const user of blockedUsers) {
-            let nId = random(8);
-            user_list.insertAdjacentHTML("beforeend", `<div><button id="${nId}" class="removebutton user_item rb">${user}</button></div>`)
-            let nn = document.getElementById(`${nId}`);
-            nn.addEventListener("click", (event) => {
-                let rmUserName = event.target.textContent;
-                removeUser(rmUserName);
-            })
+            let deleteButtonDiv = document.createElement("div");
+            user_list.appendChild(deleteButtonDiv);
+            let deleteButton = document.createElement("button");
+            deleteButton.classList.add("removebutton", "user_item", "rb");
+            deleteButton.textContent = user;
+            deleteButton.onclick = () => {
+                removeUser(user);
+            }
+            deleteButtonDiv.appendChild(deleteButton);
         }
     });
 };
