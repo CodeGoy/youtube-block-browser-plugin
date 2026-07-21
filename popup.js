@@ -60,6 +60,7 @@ let loadBlockList = () => {
     user_list.innerHTML = "";
     getBlockedList().then((blockedUsers) => {
         array_length.innerText = "Blocked:" + blockedUsers.length;
+        blockedUsers.sort();
         for (const user of blockedUsers) {
             let deleteButtonDiv = document.createElement("div");
             user_list.appendChild(deleteButtonDiv);
