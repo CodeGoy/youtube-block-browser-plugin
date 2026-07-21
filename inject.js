@@ -28,7 +28,7 @@ let getBlockedList = async () => {
     blockedUsers = [];
     let bul = await browser.storage.local.get({ [blockDataKey]: [] });
     Object.values(bul)[0].forEach(b => {
-        let bs = b.split("|");
+        let bs = b.split(":|:");
         blockedChannels.push(bs[0]);
         blockedUsers.push(bs[1]);
     })

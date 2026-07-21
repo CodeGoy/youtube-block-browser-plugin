@@ -32,7 +32,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
             const blockDataMapResult = await browser.storage.local.get({[blockDataKey]: []});
             const blockDataArray = blockDataMapResult[blockDataKey];
             if (!blockDataArray.includes(userToBlock)) {
-                blockDataArray.push(channelTitle+"|"+userToBlock);
+                blockDataArray.push(channelTitle+":|:"+userToBlock);
                 await browser.storage.local.set({[blockDataKey]: blockDataArray});
             } else {
                 console.log("Channel is already blocked");
