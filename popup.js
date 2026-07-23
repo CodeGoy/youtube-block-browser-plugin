@@ -134,8 +134,8 @@ document.addEventListener("DOMContentLoaded",  () => {
         browser.windows.create({
             url: browser.runtime.getURL("load.html"),
             type: "popup",
-            width: 400,
-            height: 400,
+            width: 600,
+            height: 125,
         });
     })
     enable_script_em.addEventListener('click', () => {
