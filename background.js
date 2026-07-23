@@ -12,7 +12,6 @@ browser.contextMenus.create({
     contexts: ["link"],
     documentUrlPatterns: [
         "https://www.youtube.com/",
-        "https://www.youtube.com/watch*",
         "https://www.youtube.com/results*",
     ],
 }, () => {
