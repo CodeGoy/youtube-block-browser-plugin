@@ -1,10 +1,9 @@
 let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
-console.log("starting script", appName, version)
 
 let blockedChannels = [];
 let blockedUsers = [];
-let contents = document.getElementById("content");
+let contents;
 const blockDataKey = "block_data";
 const enabledKey = "enable_script";
 const youtubeItemKey = "ytd-rich-item-renderer";
@@ -35,7 +34,7 @@ let getBlockedList = async () => {
 }
 
 let clean = () => {
-    let path = document.location.pathname;
+    let path = window.location.pathname;
     switch (path) {
         case "/":
             contents.querySelectorAll(youtubeItemKey).forEach(item => {
@@ -58,6 +57,13 @@ let clean = () => {
                 let channelName = textContainer.querySelector(".yt-simple-endpoint").getAttribute("href");
                 if (blockedUsers.includes(channelName)) {
                     item.remove();
+                }
+            });
+            getHideShorts().then(value => {
+                if (value) {
+                    document.querySelectorAll("grid-shelf-view-model").forEach(element => {
+                        element.remove();
+                    });
                 }
             });
             break;
@@ -97,6 +103,35 @@ browser.storage.onChanged.addListener((changes, areaName) => {
     }
 });
 
+let isUserInteracting = false;
+const interactionEvents = ['wheel', 'touchstart', 'touchmove', 'keydown', 'mousedown'];
+let lastPositionY = 0;
+let scriptScroll = false;
+
+interactionEvents.forEach(eventType => {
+  window.addEventListener(eventType, () => {
+    isUserInteracting = true;
+  }, { passive: true });
+});
+
+window.addEventListener('scroll', (event) => {
+  if (scriptScroll) {
+      scriptScroll = false;
+      return;
+  }
+  if (isUserInteracting) {
+      lastPositionY = window.scrollY;
+  } else {
+      event.stopPropagation();
+      scriptScroll = true;
+      window.scrollTo(0, lastPositionY);
+  }
+});
+
+window.addEventListener('scrollend', () => {
+    isUserInteracting = false;
+});
+
 const observer = new MutationObserver((mutationList, observer) => {
     getEnabled().then((enableScript) => {
         if (enableScript) {
@@ -105,12 +140,10 @@ const observer = new MutationObserver((mutationList, observer) => {
                     let mutations = mutation.addedNodes;
                     for (let i = 0; i < mutations.length; i++) {
                         if (mutations[i].nodeType === 1 && mutations[i].matches(youtubeItemKey) && updateTimeout == null) {
-                            updateTimeout = setTimeout(() => {
-                                getBlockedList().then(() => {
-                                    clean();
-                                });
-                                updateTimeout = null;
-                            }, 500);
+                            //console.log("node", mutations[i]);
+                            getBlockedList().then(() => {
+                                clean();
+                            });
                             break;
                         }
                     }
@@ -120,9 +153,31 @@ const observer = new MutationObserver((mutationList, observer) => {
     })
 });
 
-observer.observe(contents, { childList: true, subtree: true });
-
-// TODO : onload
-getBlockedList().then(() => {
-    clean();
+// detect path change
+navigation.addEventListener("navigate", () => {
+    observer.disconnect();
+    setTimeout(() => {init();}, 250)
 });
+
+let init = () => {
+    let path = window.location.pathname;
+    console.log("starting script", appName, version, path)
+    switch (path) {
+        case "/":
+            contents = document.getElementById("content");
+            break;
+        case "/results":
+            // TODO : fix MutationObserver scrolling
+            contents = document.body;
+            break;
+        case "/watch":
+            // TODO : fix MutationObserver scrolling
+            contents = document.getElementById("contents");
+            break;
+    }
+    observer.observe(contents, { childList: true, subtree: true });
+    getBlockedList().then(() => {
+        clean();
+    });
+};
+setTimeout(init, 250);
