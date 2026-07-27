@@ -3,13 +3,25 @@ let appName = browser.runtime.getManifest().name;
 
 let blockedChannels = [];
 let blockedUsers = [];
-let contents;
+
 const blockDataKey = "block_data";
 const enabledKey = "enable_script";
+const hideShortsOptionKey = "hide_shorts";
+let mutationTarget = null;
+
 const youtubeItemKey = "ytd-rich-item-renderer";
 const youtubeSectionKey = "ytd-rich-section-renderer";
 const youtubeUserLinkKey = ".ytAttributedStringLink";
-const hideShortsOptionKey = "hide_shorts";
+
+const resultsContainer = "ytd-video-renderer";
+const resultsSubContainer = "#text-container";
+const resultsTarget = ".yt-simple-endpoint";
+const resultsShorts = "grid-shelf-view-model";
+
+const watchContainer = "yt-lockup-view-model";
+const watchSubContainer = ".ytContentMetadataViewModelMetadataRow";
+const watchTarget = ".ytAttributedStringHost";
+
 let updateTimeout = null;
 
 let getHideShorts = async () => {
@@ -35,9 +47,10 @@ let getBlockedList = async () => {
 
 let clean = () => {
     let path = window.location.pathname;
+    console.log("cleaning:", path);
     switch (path) {
         case "/":
-            contents.querySelectorAll(youtubeItemKey).forEach(item => {
+            document.body.querySelectorAll(youtubeItemKey).forEach(item => {
                 let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
                 if (!href || blockedUsers.includes(href)) {
                     item.remove();
@@ -52,25 +65,25 @@ let clean = () => {
             });
             break;
         case "/results":
-            contents.querySelectorAll("ytd-video-renderer").forEach(item => {
-                let textContainer = item.querySelector("#text-container");
-                let channelName = textContainer.querySelector(".yt-simple-endpoint").getAttribute("href");
+            document.body.querySelectorAll(resultsContainer).forEach(item => {
+                let textContainer = item.querySelector(resultsSubContainer);
+                let channelName = textContainer.querySelector(resultsTarget).getAttribute("href");
                 if (blockedUsers.includes(channelName)) {
                     item.remove();
                 }
             });
             getHideShorts().then(value => {
                 if (value) {
-                    document.querySelectorAll("grid-shelf-view-model").forEach(element => {
+                    document.querySelectorAll(resultsShorts).forEach(element => {
                         element.remove();
                     });
                 }
             });
             break;
         case "/watch":
-            contents.querySelectorAll("yt-lockup-view-model").forEach(item => {
-                let parent = item.querySelector(".ytContentMetadataViewModelMetadataRow")
-                let channelTitle = parent.querySelector(".ytAttributedStringHost").innerText;
+            document.body.querySelectorAll(watchContainer).forEach(item => {
+                let parent = item.querySelector(watchSubContainer)
+                let channelTitle = parent.querySelector(watchTarget).innerText;
                 getBlockedList().then(() => {
                     if (blockedChannels.includes(channelTitle)) {
                         item.remove();
@@ -139,8 +152,7 @@ const observer = new MutationObserver((mutationList, observer) => {
                 if (mutation.type === "childList") {
                     let mutations = mutation.addedNodes;
                     for (let i = 0; i < mutations.length; i++) {
-                        if (mutations[i].nodeType === 1 && mutations[i].matches(youtubeItemKey) && updateTimeout == null) {
-                            //console.log("node", mutations[i]);
+                        if (mutations[i].nodeType === 1 && mutations[i].matches(mutationTarget) && updateTimeout == null) {
                             getBlockedList().then(() => {
                                 clean();
                             });
@@ -153,7 +165,6 @@ const observer = new MutationObserver((mutationList, observer) => {
     })
 });
 
-// detect path change
 navigation.addEventListener("navigate", () => {
     observer.disconnect();
     setTimeout(() => {init();}, 250)
@@ -164,18 +175,16 @@ let init = () => {
     console.log("starting script", appName, version, path)
     switch (path) {
         case "/":
-            contents = document.getElementById("content");
+            mutationTarget = youtubeItemKey
             break;
         case "/results":
-            // TODO : fix MutationObserver scrolling
-            contents = document.body;
+            mutationTarget = resultsContainer
             break;
         case "/watch":
-            // TODO : fix MutationObserver scrolling
-            contents = document.getElementById("contents");
+            mutationTarget = watchTarget
             break;
     }
-    observer.observe(contents, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
     getBlockedList().then(() => {
         clean();
     });
