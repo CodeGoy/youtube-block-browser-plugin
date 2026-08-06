@@ -1,3 +1,4 @@
+// extension menu
 let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
 console.log("starting popup", appName, version)
@@ -24,6 +25,7 @@ let resetConfirmation = 0;
 
 header.innerText = `${appName} ${version}`;
 
+// get stored values
 let getBlockedList = async () => {
     let bul = await browser.storage.local.get({ [blockDataKey]: [] });
     return  Object.values(bul)[0];
@@ -34,39 +36,10 @@ let getWhitelist = async () => {
     return  Object.values(wul)[0];
 }
 
-let removeUser = (username) => {
-    browser.storage.local.get([blockDataKey]).then((result) => {
-        let storedArray = result[blockDataKey] || [];
-        const updatedArray = storedArray.filter(item => item !== username);
-        return browser.storage.local.set({ [blockDataKey]: updatedArray });
-    }).then(() => {
-        loadBlockList();
-    }).catch((error) => {
-        console.error("Error updating storage:", error);
-    });
-};
-
-let removeWhitelistUser = (username) => {
-    browser.storage.local.get([whitelistDataKey]).then((result) => {
-        let storedArray = result[whitelistDataKey] || [];
-        const updatedArray = storedArray.filter(item => item !== username);
-        return browser.storage.local.set({ [whitelistDataKey]: updatedArray });
-    }).then(() => {
-        loadWhiteList();
-    }).catch((error) => {
-        console.error("Error updating storage:", error);
-    });
-};
-
-let buttonFuncs = () => {
-    const removeButtons = user_list.getElementsByClassName('removebutton');
-    for (let i = 0; i < removeButtons.length; i++) {
-        let crb = removeButtons[i]
-        crb.addEventListener('click', (event) => {
-            removeUser(event.target.textContent);
-        });
-    }
-};
+let getWhitelistEnabled = async () => {
+    let enableObject = await browser.storage.local.get(["enable_whitelist_mode"]);
+    return Object.values(enableObject)[0];
+}
 
 let getHideShorts = async () => {
     let hideShortsObject = await browser.storage.local.get([hideShortsOptionKey]);
@@ -116,11 +89,30 @@ let loadWhiteList = () => {
     });
 };
 
-let getWhitelistEnabled = async () => {
-    let enableObject = await browser.storage.local.get(["enable_whitelist_mode"]);
-    return Object.values(enableObject)[0];
-}
+// remove users
+let removeUser = (username) => {
+    browser.storage.local.get([blockDataKey]).then((result) => {
+        let storedArray = result[blockDataKey] || [];
+        const updatedArray = storedArray.filter(item => item !== username);
+        return browser.storage.local.set({ [blockDataKey]: updatedArray });
+    }).then(() => {
+        loadBlockList();
+    }).catch((error) => {
+        console.error("Error updating storage:", error);
+    });
+};
 
+let removeWhitelistUser = (username) => {
+    browser.storage.local.get([whitelistDataKey]).then((result) => {
+        let storedArray = result[whitelistDataKey] || [];
+        const updatedArray = storedArray.filter(item => item !== username);
+        return browser.storage.local.set({ [whitelistDataKey]: updatedArray });
+    }).then(() => {
+        loadWhiteList();
+    }).catch((error) => {
+        console.error("Error updating storage:", error);
+    });
+};
 
 document.addEventListener("DOMContentLoaded",  () => {
     getWhitelistEnabled().then((en) => {
@@ -215,5 +207,4 @@ document.addEventListener("DOMContentLoaded",  () => {
     enable_whitelist_mode.addEventListener('click', () => {
         browser.storage.local.set({enable_whitelist_mode : enable_whitelist_mode.checked});
     })
-    buttonFuncs();
 });

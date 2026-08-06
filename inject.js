@@ -1,3 +1,4 @@
+// injected script
 let version = browser.runtime.getManifest().version;
 let appName = browser.runtime.getManifest().name;
 
@@ -30,6 +31,7 @@ const watchTarget = ".ytAttributedStringHost";
 
 let updateTimeout = null;
 
+// get stored values
 let getWhitelistMode = async () => {
     let enableObject = await browser.storage.local.get([whitelistKey]);
     return Object.values(enableObject)[0];
@@ -67,101 +69,89 @@ let getWhitelist = async () => {
     })
 }
 
-let clean = () => {
-    let isWhitelistModeEnabled = false;
-    getWhitelistMode().then(whitelistMode => {
-        console.log("whitelistMode enable:", whitelistMode);
-        isWhitelistModeEnabled = whitelistMode;
-        // TODO : if enabled, remove all elements except whitelisted
-    })
-    getEnabled().then((enableScript) => {
-        if (enableScript) {
-            let path = window.location.pathname;
-            console.log("cleaning:", path);
-            switch (path) {
-                case "/":
-                    if (isWhitelistModeEnabled) {
-                        console.log("whitelistMode is enabled");
+// remove elements
+let clean = async () => {
+    let isWhitelistModeEnabled = await getWhitelistMode();
+    if (!isWhitelistModeEnabled) {
+        await getBlockedList();
+    }
+    let enableScript = await getEnabled();
+    let hideShorts = await getHideShorts();
+    if (enableScript) {
+        let path = window.location.pathname;
+        switch (path) {
+            case "/":
+                if (isWhitelistModeEnabled) {
+                    getWhitelist().then(() => {
                         document.body.querySelectorAll(youtubeItemKey).forEach(item => {
                             let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
                             if (!href || !whitelistedUsers.includes(href)) {
                                 item.remove();
                             }
                         });
-                    } else {
-                        document.body.querySelectorAll(youtubeItemKey).forEach(item => {
-                            let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
-                            if (!href || blockedUsers.includes(href)) {
-                                item.remove();
-                            }
-                        });
+                    })
+                } else {
+                    document.body.querySelectorAll(youtubeItemKey).forEach(item => {
+                        let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
+                        if (!href || blockedUsers.includes(href)) {
+                            item.remove();
+                        }
+                    });
+                }
+                if (hideShorts) {
+                    document.querySelectorAll(youtubeSectionKey).forEach(element => {
+                        element.remove();
+                    });
+                }
+                break;
+            case "/results":
+                document.body.querySelectorAll(resultsContainer).forEach(item => {
+                    let textContainer = item.querySelector(resultsSubContainer);
+                    let channelName = textContainer.querySelector(resultsTarget).getAttribute("href");
+                    if (blockedUsers.includes(channelName)) {
+                        item.remove();
                     }
-                    getHideShorts().then(value => {
-                        if (value) {
-                            document.querySelectorAll(youtubeSectionKey).forEach(element => {
-                                element.remove();
-                            });
-                        }
+                });
+                if (hideShorts) {
+                    document.querySelectorAll(resultsShorts).forEach(element => {
+                        element.remove();
                     });
-                    break;
-                case "/results":
-                    document.body.querySelectorAll(resultsContainer).forEach(item => {
-                        let textContainer = item.querySelector(resultsSubContainer);
-                        let channelName = textContainer.querySelector(resultsTarget).getAttribute("href");
-                        if (blockedUsers.includes(channelName)) {
-                            item.remove();
-                        }
-                    });
-                    getHideShorts().then(value => {
-                        if (value) {
-                            document.querySelectorAll(resultsShorts).forEach(element => {
-                                element.remove();
-                            });
-                        }
-                    });
-                    break;
-                case "/watch":
-                    document.body.querySelectorAll(watchContainer).forEach(item => {
-                        let parent = item.querySelector(watchSubContainer)
-                        let channelTitle = parent.querySelector(watchTarget).innerText;
-                        getBlockedList().then(() => {
-                            if (blockedChannels.includes(channelTitle)) {
-                                item.remove();
-                            }
-                        })
-                        if (channelTitle.includes(" • ")) {
-                            item.remove();
-                        }
-                    });
-                    break;
-                default:
-                    console.log("unknown path", path);
-                    break;
-            }
+                }
+                break;
+            case "/watch":
+                document.body.querySelectorAll(watchContainer).forEach(item => {
+                    let parent = item.querySelector(watchSubContainer)
+                    let channelTitle = parent.querySelector(watchTarget).innerText;
+                    if (blockedChannels.includes(channelTitle)) {
+                        item.remove();
+                    }
+                    if (channelTitle.includes(" • ")) {
+                        item.remove();
+                    }
+                });
+                break;
+            default:
+                console.log("unknown path", path);
+                break;
         }
-    });
+    }
 };
 
+// listen for message from popup
 browser.runtime.onMessage.addListener(async (message) => {
     if (message.action === "clean") {
-        getWhitelist().then(() => {
-            getBlockedList().then(() => {
-                clean();
-            });
-        })
+        clean();
     }
 });
 
+// listen for blocklist changes
 browser.storage.onChanged.addListener((changes, areaName) => {
     if (changes.hasOwnProperty(blockDataKey)) {
-        getWhitelist().then(() => {
-            getBlockedList().then(() => {
-                clean();
-            });
-        })
+        clean();
     }
 });
 
+// scrolling
 let isUserInteracting = false;
 const interactionEvents = ['wheel', 'touchstart', 'touchmove', 'keydown', 'mousedown'];
 let lastPositionY = 0;
@@ -191,17 +181,14 @@ window.addEventListener('scrollend', () => {
     isUserInteracting = false;
 });
 
+// MutationObserver
 const observer = new MutationObserver((mutationList, observer) => {
     for (const mutation of mutationList) {
         if (mutation.type === "childList") {
             let mutations = mutation.addedNodes;
             for (let i = 0; i < mutations.length; i++) {
                 if (mutations[i].nodeType === 1 && mutations[i].matches(mutationTarget) && updateTimeout == null) {
-                    getWhitelist().then(() => {
-                        getBlockedList().then(() => {
-                            clean();
-                        });
-                    })
+                    clean();
                     break;
                 }
             }
@@ -209,6 +196,7 @@ const observer = new MutationObserver((mutationList, observer) => {
     }
 });
 
+// listen for location changes
 navigation.addEventListener("navigate", () => {
     observer.disconnect();
     setTimeout(() => {init();}, 250)
@@ -229,10 +217,6 @@ let init = () => {
             break;
     }
     observer.observe(document.body, { childList: true, subtree: true });
-    getWhitelist().then(() => {
-        getBlockedList().then(() => {
-            clean();
-        });
-    })
+    clean();
 };
 setTimeout(init, 250);

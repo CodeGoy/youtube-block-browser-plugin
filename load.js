@@ -1,3 +1,4 @@
+// load saved list
 console.log("starting load.js:", browser.runtime.getManifest().name, browser.runtime.getManifest().version)
 
 const blockDataKey = "block_data";
