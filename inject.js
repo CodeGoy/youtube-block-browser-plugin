@@ -4,6 +4,12 @@ let appName = browser.runtime.getManifest().name;
 let blockedChannels = [];
 let blockedUsers = [];
 
+let whitelistedChannels = [];
+let whitelistedUsers = [];
+
+const whitelistKey = "enable_whitelist_mode";
+const whitelistDataKey = "whitelist";
+
 const blockDataKey = "block_data";
 const enabledKey = "enable_script";
 const hideShortsOptionKey = "hide_shorts";
@@ -23,6 +29,11 @@ const watchSubContainer = ".ytContentMetadataViewModelMetadataRow";
 const watchTarget = ".ytAttributedStringHost";
 
 let updateTimeout = null;
+
+let getWhitelistMode = async () => {
+    let enableObject = await browser.storage.local.get([whitelistKey]);
+    return Object.values(enableObject)[0];
+}
 
 let getHideShorts = async () => {
     let enableObject = await browser.storage.local.get([hideShortsOptionKey]);
@@ -45,74 +56,109 @@ let getBlockedList = async () => {
     })
 }
 
+let getWhitelist = async () => {
+    whitelistedChannels = [];
+    whitelistedUsers = [];
+    let bul = await browser.storage.local.get({ [whitelistDataKey]: [] });
+    Object.values(bul)[0].forEach(b => {
+        let bs = b.split(":|:");
+        whitelistedChannels.push(bs[0]);
+        whitelistedUsers.push(bs[1]);
+    })
+}
+
 let clean = () => {
-    let path = window.location.pathname;
-    console.log("cleaning:", path);
-    switch (path) {
-        case "/":
-            document.body.querySelectorAll(youtubeItemKey).forEach(item => {
-                let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
-                if (!href || blockedUsers.includes(href)) {
-                    item.remove();
-                }
-            });
-            getHideShorts().then(value => {
-                if (value) {
-                    document.querySelectorAll(youtubeSectionKey).forEach(element => {
-                        element.remove();
-                    });
-                }
-            });
-            break;
-        case "/results":
-            document.body.querySelectorAll(resultsContainer).forEach(item => {
-                let textContainer = item.querySelector(resultsSubContainer);
-                let channelName = textContainer.querySelector(resultsTarget).getAttribute("href");
-                if (blockedUsers.includes(channelName)) {
-                    item.remove();
-                }
-            });
-            getHideShorts().then(value => {
-                if (value) {
-                    document.querySelectorAll(resultsShorts).forEach(element => {
-                        element.remove();
-                    });
-                }
-            });
-            break;
-        case "/watch":
-            document.body.querySelectorAll(watchContainer).forEach(item => {
-                let parent = item.querySelector(watchSubContainer)
-                let channelTitle = parent.querySelector(watchTarget).innerText;
-                getBlockedList().then(() => {
-                    if (blockedChannels.includes(channelTitle)) {
-                        item.remove();
+    let isWhitelistModeEnabled = false;
+    getWhitelistMode().then(whitelistMode => {
+        console.log("whitelistMode enable:", whitelistMode);
+        isWhitelistModeEnabled = whitelistMode;
+        // TODO : if enabled, remove all elements except whitelisted
+    })
+    getEnabled().then((enableScript) => {
+        if (enableScript) {
+            let path = window.location.pathname;
+            console.log("cleaning:", path);
+            switch (path) {
+                case "/":
+                    if (isWhitelistModeEnabled) {
+                        console.log("whitelistMode is enabled");
+                        document.body.querySelectorAll(youtubeItemKey).forEach(item => {
+                            let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
+                            if (!href || !whitelistedUsers.includes(href)) {
+                                item.remove();
+                            }
+                        });
+                    } else {
+                        document.body.querySelectorAll(youtubeItemKey).forEach(item => {
+                            let href = item.querySelector(youtubeUserLinkKey)?.getAttribute("href");
+                            if (!href || blockedUsers.includes(href)) {
+                                item.remove();
+                            }
+                        });
                     }
-                })
-                if (channelTitle.includes(" • ")) {
-                    item.remove();
-                }
-            });
-            break;
-        default:
-            console.log("unknown path", path);
-            break;
-    }
+                    getHideShorts().then(value => {
+                        if (value) {
+                            document.querySelectorAll(youtubeSectionKey).forEach(element => {
+                                element.remove();
+                            });
+                        }
+                    });
+                    break;
+                case "/results":
+                    document.body.querySelectorAll(resultsContainer).forEach(item => {
+                        let textContainer = item.querySelector(resultsSubContainer);
+                        let channelName = textContainer.querySelector(resultsTarget).getAttribute("href");
+                        if (blockedUsers.includes(channelName)) {
+                            item.remove();
+                        }
+                    });
+                    getHideShorts().then(value => {
+                        if (value) {
+                            document.querySelectorAll(resultsShorts).forEach(element => {
+                                element.remove();
+                            });
+                        }
+                    });
+                    break;
+                case "/watch":
+                    document.body.querySelectorAll(watchContainer).forEach(item => {
+                        let parent = item.querySelector(watchSubContainer)
+                        let channelTitle = parent.querySelector(watchTarget).innerText;
+                        getBlockedList().then(() => {
+                            if (blockedChannels.includes(channelTitle)) {
+                                item.remove();
+                            }
+                        })
+                        if (channelTitle.includes(" • ")) {
+                            item.remove();
+                        }
+                    });
+                    break;
+                default:
+                    console.log("unknown path", path);
+                    break;
+            }
+        }
+    });
 };
 
 browser.runtime.onMessage.addListener(async (message) => {
     if (message.action === "clean") {
-        getBlockedList().then(() => {
-            clean();
-        });
+        getWhitelist().then(() => {
+            getBlockedList().then(() => {
+                clean();
+            });
+        })
     }
 });
 
 browser.storage.onChanged.addListener((changes, areaName) => {
     if (changes.hasOwnProperty(blockDataKey)) {
-        getBlockedList().then(() => {
-            clean();
-        });
+        getWhitelist().then(() => {
+            getBlockedList().then(() => {
+                clean();
+            });
+        })
     }
 });
 
@@ -146,23 +192,21 @@ window.addEventListener('scrollend', () => {
 });
 
 const observer = new MutationObserver((mutationList, observer) => {
-    getEnabled().then((enableScript) => {
-        if (enableScript) {
-            for (const mutation of mutationList) {
-                if (mutation.type === "childList") {
-                    let mutations = mutation.addedNodes;
-                    for (let i = 0; i < mutations.length; i++) {
-                        if (mutations[i].nodeType === 1 && mutations[i].matches(mutationTarget) && updateTimeout == null) {
-                            getBlockedList().then(() => {
-                                clean();
-                            });
-                            break;
-                        }
-                    }
+    for (const mutation of mutationList) {
+        if (mutation.type === "childList") {
+            let mutations = mutation.addedNodes;
+            for (let i = 0; i < mutations.length; i++) {
+                if (mutations[i].nodeType === 1 && mutations[i].matches(mutationTarget) && updateTimeout == null) {
+                    getWhitelist().then(() => {
+                        getBlockedList().then(() => {
+                            clean();
+                        });
+                    })
+                    break;
                 }
             }
         }
-    })
+    }
 });
 
 navigation.addEventListener("navigate", () => {
@@ -185,8 +229,10 @@ let init = () => {
             break;
     }
     observer.observe(document.body, { childList: true, subtree: true });
-    getBlockedList().then(() => {
-        clean();
-    });
+    getWhitelist().then(() => {
+        getBlockedList().then(() => {
+            clean();
+        });
+    })
 };
 setTimeout(init, 250);
