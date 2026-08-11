@@ -31,6 +31,30 @@ const watchTarget = ".ytAttributedStringHost";
 
 let updateTimeout = null;
 
+// popup notification
+let notification = (text) => {
+    let notificationDiv = document.createElement("div");
+    notificationDiv.style.display = "flex";
+    notificationDiv.style.position = "fixed";
+    notificationDiv.style.top = "15px";
+    notificationDiv.style.right = "15px";
+    notificationDiv.style.zIndex = "2147483647";
+    notificationDiv.style.backgroundColor = "black";
+    notificationDiv.style.color = "white";
+    notificationDiv.style.border = "1px solid red";
+    notificationDiv.id = "youtubeBlockNotification";
+
+    let notificationText = document.createElement("h1")
+    notificationText.innerText = text;
+    notificationText.style.margin = "10px";
+    notificationText.style.padding = "10px";
+    notificationDiv.appendChild(notificationText);
+    document.body.appendChild(notificationDiv);
+    setTimeout(() => {
+        document.body.removeChild(notificationDiv);
+    }, 3500)
+};
+
 // get stored values
 let getWhitelistMode = async () => {
     let enableObject = await browser.storage.local.get([whitelistKey]);
@@ -120,7 +144,7 @@ let clean = async () => {
                 break;
             case "/watch":
                 document.body.querySelectorAll(watchContainer).forEach(item => {
-                    let parent = item.querySelector(watchSubContainer)
+                    let parent = item.querySelector(watchSubContainer);
                     let channelTitle = parent.querySelector(watchTarget).innerText;
                     if (blockedChannels.includes(channelTitle)) {
                         item.remove();
@@ -139,8 +163,16 @@ let clean = async () => {
 
 // listen for message from popup
 browser.runtime.onMessage.addListener(async (message) => {
-    if (message.action === "clean") {
-        clean();
+    switch (message.action) {
+        case "clean":
+            await clean();
+            break;
+        case "notification":
+            notification(message.text);
+            break;
+        default:
+            console.log("unknown message", message);
+            break;
     }
 });
 
@@ -199,7 +231,7 @@ const observer = new MutationObserver((mutationList, observer) => {
 // listen for location changes
 navigation.addEventListener("navigate", () => {
     observer.disconnect();
-    setTimeout(() => {init();}, 250)
+    setTimeout(() => {init();}, 250);
 });
 
 let init = () => {
@@ -207,13 +239,13 @@ let init = () => {
     console.log("starting script", appName, version, path)
     switch (path) {
         case "/":
-            mutationTarget = youtubeItemKey
+            mutationTarget = youtubeItemKey;
             break;
         case "/results":
-            mutationTarget = resultsContainer
+            mutationTarget = resultsContainer;
             break;
         case "/watch":
-            mutationTarget = watchTarget
+            mutationTarget = watchTarget;
             break;
     }
     observer.observe(document.body, { childList: true, subtree: true });

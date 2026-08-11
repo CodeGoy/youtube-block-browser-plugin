@@ -42,6 +42,19 @@ browser.contextMenus.create({
     }
 });
 
+let sendMessage = async (text) => {
+    try {
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (!tab) {
+            console.error("No active tab found.");
+            return;
+        }
+        await browser.tabs.sendMessage(tab.id, {action: "notification", text: text});
+    } catch (error) {
+        console.error("Error messaging tab:", error);
+    }
+};
+
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
     let channelLink = info.linkUrl.replaceAll("https://www.youtube.com", "");
     if (channelLink.startsWith("/@") || channelLink.startsWith("/channel/")) {
@@ -53,9 +66,11 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
                 const whitelistDataMapResult = await browser.storage.local.get({[whitelistDataKey]: []});
                 const whitelistDataArray = whitelistDataMapResult[whitelistDataKey];
                 if (!whitelistDataArray.includes(channelData)) {
+                    await sendMessage(`"${channelTitle}" whitelisted!!`);
                     whitelistDataArray.push(channelData);
                     await browser.storage.local.set({[whitelistDataKey]: whitelistDataArray});
                 } else {
+                    await sendMessage(`"${channelTitle}" is already whitelisted`);
                     console.log("Channel is already whitelisted");
                 }
                 break;
@@ -63,9 +78,11 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
                 const blockDataMapResult = await browser.storage.local.get({[blockDataKey]: []});
                 const blockDataArray = blockDataMapResult[blockDataKey];
                 if (!blockDataArray.includes(channelData)) {
+                    await sendMessage(`"${channelTitle}" blocked!!`);
                     blockDataArray.push(channelData);
                     await browser.storage.local.set({[blockDataKey]: blockDataArray});
                 } else {
+                    await sendMessage(`"${channelTitle}" is already blocked`);
                     console.log("Channel is already blocked");
                 }
                 break;
