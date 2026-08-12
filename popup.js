@@ -51,7 +51,7 @@ let getEnabled = async () => {
     return Object.values(enableObject)[0];
 }
 
-let loadBlockList = () => {
+let loadLists = () => {
     user_list.innerHTML = "";
     getBlockedList().then((blockedUsers) => {
         array_length.innerText = "Blocked:" + blockedUsers.length;
@@ -63,14 +63,11 @@ let loadBlockList = () => {
             deleteButton.classList.add("removebutton", "user_item", "rb");
             deleteButton.textContent = user;
             deleteButton.onclick = () => {
-                removeUser(user);
+                removeUser(user, blockDataKey);
             }
             deleteButtonDiv.appendChild(deleteButton);
         }
     });
-};
-
-let loadWhiteList = () => {
     whitelist_element.innerHTML = "";
     getWhitelist().then((whitelist) => {
         whitelist_length.innerText = "Whitelisted:" + whitelist.length;
@@ -82,7 +79,7 @@ let loadWhiteList = () => {
             deleteButton.classList.add("removebutton", "user_item", "rb");
             deleteButton.textContent = user;
             deleteButton.onclick = () => {
-                removeWhitelistUser(user);
+                removeUser(user, whitelistDataKey);
             }
             deleteButtonDiv.appendChild(deleteButton);
         }
@@ -90,25 +87,13 @@ let loadWhiteList = () => {
 };
 
 // remove users
-let removeUser = (username) => {
-    browser.storage.local.get([blockDataKey]).then((result) => {
-        let storedArray = result[blockDataKey] || [];
+let removeUser = (username, datakey) => {
+    browser.storage.local.get([datakey]).then((result) => {
+        let storedArray = result[datakey] || [];
         const updatedArray = storedArray.filter(item => item !== username);
-        return browser.storage.local.set({ [blockDataKey]: updatedArray });
+        return browser.storage.local.set({ [datakey]: updatedArray });
     }).then(() => {
-        loadBlockList();
-    }).catch((error) => {
-        console.error("Error updating storage:", error);
-    });
-};
-
-let removeWhitelistUser = (username) => {
-    browser.storage.local.get([whitelistDataKey]).then((result) => {
-        let storedArray = result[whitelistDataKey] || [];
-        const updatedArray = storedArray.filter(item => item !== username);
-        return browser.storage.local.set({ [whitelistDataKey]: updatedArray });
-    }).then(() => {
-        loadWhiteList();
+        loadLists();
     }).catch((error) => {
         console.error("Error updating storage:", error);
     });
@@ -124,8 +109,7 @@ document.addEventListener("DOMContentLoaded",  () => {
     getHideShorts().then((shorts) => {
         hide_shorts.checked = shorts;
     })
-    loadBlockList();
-    loadWhiteList();
+    loadLists();
     reset.addEventListener("click", () => {
         switch (resetConfirmation) {
             case 0:
@@ -137,7 +121,7 @@ document.addEventListener("DOMContentLoaded",  () => {
                 reset.innerText = "Storage Reset";
                 browser.storage.local.remove(blockDataKey);
                 browser.storage.local.remove(whitelistDataKey);
-                loadBlockList();
+                loadLists();
                 break;
         }
     })
