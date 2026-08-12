@@ -183,7 +183,8 @@ document.addEventListener("DOMContentLoaded",  () => {
                 const blob = new Blob([bu], { type: 'application/json' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = baseFilename + '.json';
+                let now = new Date();
+                link.download = baseFilename + `-${now.getFullYear()}_${now.getMonth() + 1}_${now.getDate()}-${now.getHours()}_${now.getMinutes()}_${now.getSeconds()}.json`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
