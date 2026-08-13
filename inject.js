@@ -152,6 +152,15 @@ let clean = async () => {
                     if (channelTitle.includes(" • ")) {
                         item.remove();
                     }
+                    if (hideShorts) {
+                        let badge = item.querySelectorAll(".ytBadgeShapeText");
+                        if (badge.length > 1) {
+                            let badgeText = badge[1].firstChild.textContent;
+                            if (badgeText !== "New") {
+                                item.remove();
+                            }
+                        }
+                    }
                 });
                 break;
             default:
