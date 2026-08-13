@@ -72,7 +72,7 @@ let loadLists = () => {
     getWhitelist().then((whitelist) => {
         whitelist_length.innerText = "Whitelisted:" + whitelist.length;
         whitelist.sort();
-        for (const user of whitelist) {
+        for (let user of whitelist) {
             let deleteButtonDiv = document.createElement("div");
             whitelist_element.appendChild(deleteButtonDiv);
             let deleteButton = document.createElement("button");
@@ -82,7 +82,14 @@ let loadLists = () => {
                 removeUser(user, whitelistDataKey);
             }
             deleteButtonDiv.appendChild(deleteButton);
-        }
+            let visitButton = document.createElement("button");
+            visitButton.classList.add("visitbutton", "user_item", "rb");
+            visitButton.textContent = "Visit";
+            visitButton.onclick = () => {
+                window.open('https://www.youtube.com'+ user.split(":|:")[1], '_blank');
+            }
+            deleteButtonDiv.appendChild(visitButton);
+         }
     });
 };
 
