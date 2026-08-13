@@ -3,13 +3,22 @@
 Block channels from appearing on youtube homepage, search results and watch page.
 
 * Remove "shorts" sections from feeds
-* save block list to file and reload list
 * removes collabs (any element lookup that returns null or undefined)
+* download and reload config
+
+### whitelist
+
+Whitelist mode only shows whitelisted channels
+
+NOTE: Having a small whitelist can cause the page to load endlessly
 
 ## use
 
-This Extension creates a contextMenu item...
+This Extension creates 2 contextMenu items... BlockUser and Whitelist
 
-1) right click on the channel link under video thumbnail
-2) choose the "BlockUser" option
-3) watch all videos from the blocked channel disappear
+1) right-click on the channel link under video thumbnail
+2) choose the "BlockUser" or "Whitelist" option
+
+# get
+
+This Extension is listed on mozilla.org → [firefox](https://addons.mozilla.org/en-US/firefox/addon/youtubeblock/)
